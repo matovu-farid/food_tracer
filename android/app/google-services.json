@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "669214498207",
+    "project_id": "food-tracing",
+    "storage_bucket": "food-tracing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669214498207:android:19e24c9943f79cdf3f71aa",
+        "android_client_info": {
+          "package_name": "com.faridmatovu.food_tracing_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669214498207-k7sb68is1vh7uuhekh3l42of101fmv4p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZsFP18ffBU8GMvetW1VWryZK9vPsCywc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669214498207-k7sb68is1vh7uuhekh3l42of101fmv4p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
