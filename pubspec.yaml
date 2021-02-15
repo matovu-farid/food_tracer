@@ -21,6 +21,11 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  font_awesome_flutter: ^8.11.0
+  firebase_core: ^0.7.0
+  firebase_ml_vision: ^0.10.0
+  video_player: ^1.0.1
+  camera: ^0.7.0+2
   flutter:
     sdk: flutter
 
