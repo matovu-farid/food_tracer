@@ -39,14 +39,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage>  {
-  //final File imageFile = getImageFile();
-  //FirebaseVisionImage visionImage() => FirebaseVisionImage.fromFile(imageFile);
-  CameraController controller;
 
+  CameraController controller;
+  FirebaseVisionImage visionImage;
+
+  Streamcontroller<List<String>> streamController ;
+
+  Future<File> getImageFile(XFile imageXFile)async{
+  return File.fromRawPath(await imageXFile.readAsBytes());
+  }
   @override
   void initState() {
     super.initState();
     controller = CameraController(cameras[0], ResolutionPreset.medium);
+    streamController = Streamcontroller();
     controller.initialize().then((_) {
       if (!mounted) {
         return;
@@ -58,6 +64,8 @@ class _MyHomePageState extends State<MyHomePage>  {
   @override
   void dispose() {
     controller?.dispose();
+
+    streamController?.dispose();
     super.dispose();
   }
 
@@ -78,8 +86,18 @@ class _MyHomePageState extends State<MyHomePage>  {
       }
     }
   }
-  XFile imageFile;
+  XFile imageXFile;
+  final ImageLabeler labeler = FirebaseVision.instance.imageLabeler();
+  List<String> labelList;
 
+
+  Future<List<String>> getLabelList()async{
+    imageXFile = await controller.takePicture();
+    visionImage = FirebaseVisionImage.fromFilePath(imageXFile.path);
+    final List<ImageLabel> labels = await labeler.processImage(visionImage);
+    return  labels.map((e) => e.text).toList();
+  }
+  bool pictureClicked =false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,9 +117,28 @@ class _MyHomePageState extends State<MyHomePage>  {
                 IconButton(
                   icon: Icon(FontAwesomeIcons.camera),
                   onPressed: ()async{
-                    imageFile = await controller.takePicture();
+                    // await getLabelList();
+                    pictureClicked=true;
                   },
-                )
+                ),
+                FutureBuilder<List<String>>(
+                  future: getLabelList(),
+                    builder: (context,snapshot){
+                    final list = snapshot.data;
+                    pictureClicked=false;
+                    if(snapshot.connectionState==ConnectionState.done){
+                      if(snapshot.hasError){
+                        return Text('${snapshot.error}');
+                      }else
+                    return Column(
+                      children: [
+                        ...list.map((e) => Text(e)).toList()
+                      ],
+                    );}
+                    else return Text('No Data Received');
+                    },
+                    )
+
               ],
             ),
             //Listener()
