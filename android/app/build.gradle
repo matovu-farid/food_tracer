@@ -66,6 +66,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-ml-vision:24.1.0'
     implementation 'com.google.firebase:firebase-ml-vision-image-label-model:20.0.2'
+    implementation 'com.google.mlkit:barcode-scanning:16.1.1'
 
 
 }

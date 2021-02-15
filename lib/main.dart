@@ -89,6 +89,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   }
   XFile imageXFile;
   final ImageLabeler labeler = FirebaseVision.instance.imageLabeler();
+  final BarcodeDetector barcodeDetector = FirebaseVision.instance.barcodeDetector();
   List<String> labelList;
 
 
@@ -96,7 +97,16 @@ class _MyHomePageState extends State<MyHomePage>  {
     imageXFile = await controller.takePicture();
     visionImage = FirebaseVisionImage.fromFilePath(imageXFile.path);
     final List<ImageLabel> labels = await labeler.processImage(visionImage);
-    return  labels.map((e) => e.text).toList();
+     List<Barcode> barcodeList = await barcodeDetector.detectInImage(visionImage);
+     if(barcodeDetector!=null)
+       print('Barcode tector aint null');
+     //print(barcodeList.first.toString());
+    if(barcodeList!=null&&barcodeList.isNotEmpty)
+      print('BarCode List not Empty');
+    print('-------------------------------------');
+
+     return barcodeList.map((e) => e.toString()).toList();
+   // return  labels.map((e) => e.text).toList();
   }
   bool pictureClicked =false;
   var completer = Completer<List<String>>();
@@ -124,13 +134,7 @@ class _MyHomePageState extends State<MyHomePage>  {
               width: MediaQuery.of(context).size.width,
               child: Column(
                 children: [
-                  Flexible(
-
-                    child: AspectRatio(
-                        aspectRatio: controller.value.aspectRatio,
-                        child: CameraPreview(controller)),
-                    flex: 4,
-                  ),
+                  CamPreview(controller: controller,imageFile: imageXFile,),
                   Flexible(
                     flex: 2,
                     child: IconButton(
@@ -174,6 +178,116 @@ class _MyHomePageState extends State<MyHomePage>  {
               ),
             ),
             //Listener()
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CamPreview extends StatelessWidget {
+  final XFile imageFile;
+   CamPreview({
+    Key key,
+    @required this.controller,
+     @required this.imageFile,
+  }) : super(key: key);
+
+  final CameraController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      flex: 4,
+      child: AspectRatio(
+          aspectRatio: controller.value.aspectRatio,
+          child: GestureDetector(
+            onScaleStart: _handleScaleStart,
+              onScaleUpdate: _handleScaleUpdate,
+              child: _cameraPreviewWidget())),
+
+    );
+  }
+  bool enableAudio = true;
+  int _pointers = 0;
+
+  double _minAvailableZoom;
+  double _maxAvailableZoom;
+  double _currentScale = 1.0;
+  double _baseScale = 1.0;
+  double _minAvailableExposureOffset = 0.0;
+  double _maxAvailableExposureOffset = 0.0;
+  double _currentExposureOffset = 0.0;
+  AnimationController _flashModeControlRowAnimationController;
+  Animation<double> _flashModeControlRowAnimation;
+  AnimationController _exposureModeControlRowAnimationController;
+  Animation<double> _exposureModeControlRowAnimation;
+  AnimationController _focusModeControlRowAnimationController;
+  Animation<double> _focusModeControlRowAnimation;
+  void onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
+    final offset = Offset(
+      details.localPosition.dx / constraints.maxWidth,
+      details.localPosition.dy / constraints.maxHeight,
+    );
+    controller.setExposurePoint(offset);
+    controller.setFocusPoint(offset);
+  }
+  Widget _cameraPreviewWidget() {
+
+      return Listener(
+        onPointerDown: (_) => _pointers++,
+        onPointerUp: (_) => _pointers--,
+        child: CameraPreview(
+          controller,
+          child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onScaleStart: _handleScaleStart,
+                  onScaleUpdate: _handleScaleUpdate,
+                  onTapDown: (details) => onViewFinderTap(details, constraints),
+                );
+              }),
+        ),
+      );
+
+  }
+
+  void _handleScaleStart(ScaleStartDetails details) {
+    _baseScale = _currentScale;
+  }
+
+  Future<void> _handleScaleUpdate(ScaleUpdateDetails details) async {
+    // When there are not exactly two fingers on screen don't scale
+    if (_pointers != 2) {
+      return;
+    }
+    _minAvailableZoom = await controller.getMinZoomLevel();
+    _maxAvailableZoom = await controller.getMaxZoomLevel();
+
+
+    _currentScale = (_baseScale * details.scale)?.clamp(_minAvailableZoom, _maxAvailableZoom);
+
+    await controller.setZoomLevel(_currentScale);
+  }
+
+  /// Display the thumbnail of the captured image or video.
+  Widget _thumbnailWidget() {
+    return Expanded(
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+
+            imageFile == null
+                ? Container()
+                : SizedBox(
+              child: Image.file(File(imageFile.path)),
+
+              width: 64.0,
+              height: 64.0,
+            ),
           ],
         ),
       ),
