@@ -43,7 +43,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   CameraController controller;
   FirebaseVisionImage visionImage;
 
-  Streamcontroller<List<String>> streamController ;
+  // Streamcontroller<List<String>> streamController ;
 
   Future<File> getImageFile(XFile imageXFile)async{
   return File.fromRawPath(await imageXFile.readAsBytes());
@@ -52,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   void initState() {
     super.initState();
     controller = CameraController(cameras[0], ResolutionPreset.medium);
-    streamController = Streamcontroller();
+    // streamController = Streamcontroller();
     controller.initialize().then((_) {
       if (!mounted) {
         return;
@@ -65,7 +65,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   void dispose() {
     controller?.dispose();
 
-    streamController?.dispose();
+    //streamController?.dispose();
     super.dispose();
   }
 
