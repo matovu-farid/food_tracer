@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
@@ -43,7 +44,6 @@ class _MyHomePageState extends State<MyHomePage>  {
   CameraController controller;
   FirebaseVisionImage visionImage;
 
-  // Streamcontroller<List<String>> streamController ;
 
   Future<File> getImageFile(XFile imageXFile)async{
   return File.fromRawPath(await imageXFile.readAsBytes());
@@ -64,6 +64,7 @@ class _MyHomePageState extends State<MyHomePage>  {
   @override
   void dispose() {
     controller?.dispose();
+    streamController.close();
 
     //streamController?.dispose();
     super.dispose();
@@ -98,6 +99,15 @@ class _MyHomePageState extends State<MyHomePage>  {
     return  labels.map((e) => e.text).toList();
   }
   bool pictureClicked =false;
+  var completer = Completer<List<String>>();
+  final streamController = StreamController<List<String>>();
+  Future addToStream()async{
+    final list = await getLabelList();
+    streamController.add(list);
+  }
+  // List<String> get stream =>streamController.stream;
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,41 +115,63 @@ class _MyHomePageState extends State<MyHomePage>  {
         title: Center(child: Text(widget.title)),
       ),
       body: Center(
-        child: Column(
+        child: ListView(
           children: [
             if (!controller.value.isInitialized) Container(),
             if(controller.value.isInitialized)
-            Column(
-              children: [
-                AspectRatio(
-                    aspectRatio: controller.value.aspectRatio,
-                    child: CameraPreview(controller)),
-                IconButton(
-                  icon: Icon(FontAwesomeIcons.camera),
-                  onPressed: ()async{
-                    // await getLabelList();
-                    pictureClicked=true;
-                  },
-                ),
-                FutureBuilder<List<String>>(
-                  future: getLabelList(),
-                    builder: (context,snapshot){
-                    final list = snapshot.data;
-                    pictureClicked=false;
-                    if(snapshot.connectionState==ConnectionState.done){
-                      if(snapshot.hasError){
-                        return Text('${snapshot.error}');
-                      }else
-                    return Column(
-                      children: [
-                        ...list.map((e) => Text(e)).toList()
-                      ],
-                    );}
-                    else return Text('No Data Received');
-                    },
-                    )
+            Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+              child: Column(
+                children: [
+                  Flexible(
 
-              ],
+                    child: AspectRatio(
+                        aspectRatio: controller.value.aspectRatio,
+                        child: CameraPreview(controller)),
+                    flex: 4,
+                  ),
+                  Flexible(
+                    flex: 2,
+                    child: IconButton(
+                      icon: Icon(FontAwesomeIcons.camera),
+                      onPressed: (){
+
+                        addToStream();
+                      },
+                    ),
+                  ),
+                  Flexible(
+                    flex: 4,
+                    child: StreamBuilder<List<String>>(
+                      stream: streamController.stream,
+                        builder: (context,snapshot){
+                        print(snapshot.connectionState);
+
+                        final list = snapshot.data;
+                        //pictureClicked=false;
+                        if(snapshot.connectionState==ConnectionState.active){
+                          if(snapshot.hasError){
+                            return Text('${snapshot.error}');
+                          }else
+                        return Container(
+                          child: ListView(
+                            physics: ClampingScrollPhysics(),
+                            children: [
+                              ...list.map((e) => ListTile(
+                                  title : Text(e),
+
+                              )).toList()
+                            ],
+                          ),
+                        );}
+                        else return Text('No Data Received');
+                        },
+                        ),
+                  )
+
+                ],
+              ),
             ),
             //Listener()
           ],
